@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-br" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Transferência de Produtos</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+    };
+  </script>
+
+  <!-- Ícones (Tabler Icons) -->
+  <link rel="stylesheet" href="https://unpkg.com/@tabler/icons-webfont/dist/tabler-icons.min.css"/>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen flex flex-col items-center p-4 text-gray-900 dark:text-gray-100">
+
+  <!-- Container Principal -->
+  <div class="w-full max-w-md bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+
+    <!-- Logotipo -->
+    <div class="flex justify-center mb-4">
+      <img src="logo.png" alt="Logo" class="h-12" onerror="this.style.display='none'" />
+    </div>
+
+    <!-- Título -->
+    <h1 class="text-2xl font-bold text-blue-700 dark:text-blue-400 mb-4 text-center flex items-center justify-center gap-2">
+      <i class="ti ti-transfer"></i> Transferência de Produtos
+    </h1>
+
+    <!-- Formulário -->
+    <form id="transfer-form" class="space-y-3">
+      <div>
+        <label class="block text-sm font-medium mb-1">Produto</label>
+        <input type="text" id="produto" placeholder="Digite o nome do produto"
+          class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-gray-700 dark:border-gray-600"
+          required />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium mb-1">Setor de Origem</label>
+        <input type="text" id="setor-origem" placeholder="Ex: Almoxarifado"
+          class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-gray-700 dark:border-gray-600"
+          required />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium mb-1">Setor de Destino</label>
+        <input type="text" id="setor-destino" placeholder="Ex: Produção"
+          class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-gray-700 dark:border-gray-600"
+          required />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium mb-1">Quantidade</label>
+        <input type="number" id="quantidade" placeholder="Quantidade"
+          class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-gray-700 dark:border-gray-600"
+          required />
+      </div>
+
+      <button type="submit"
+        class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded w-full flex items-center justify-center gap-2">
+        <i class="ti ti-arrow-right-arrow-left"></i> Transferir
+      </button>
+    </form>
+  </div>
+
+  <!-- Histórico -->
+  <div class="w-full max-w-md mt-6">
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="text-xl font-semibold text-gray-800 dark:text-white flex items-center gap-2">
+        <i class="ti ti-history text-blue-600 dark:text-blue-400"></i> Histórico
+      </h2>
+      <button id="btn-apagar" class="text-red-600 hover:text-red-800 dark:text-red-400 text-sm flex items-center gap-1">
+        <i class="ti ti-trash"></i> Apagar
+      </button>
+    </div>
+    <ul id="historico" class="space-y-2 text-sm"></ul>
+  </div>
+
+  <!-- Script -->
+  <script>
+    const form = document.getElementById("transfer-form");
+    const historico = document.getElementById("historico");
+    const btnApagar = document.getElementById("btn-apagar");
+
+    function carregarHistorico() {
+      historico.innerHTML = "";
+      const registros = JSON.parse(localStorage.getItem("transferencias")) || [];
+      registros.reverse().forEach((registro) => {
+        const li = document.createElement("li");
+        li.className =
+          "bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 px-4 py-3 rounded shadow-md border border-gray-200 dark:border-gray-600";
+        li.textContent = `${registro.data} - ${registro.produto} | ${registro.quantidade} unid | ${registro.origem} → ${registro.destino}`;
+        historico.appendChild(li);
+      });
+    }
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      const produto = document.getElementById("produto").value.trim();
+      const origem = document.getElementById("setor-origem").value.trim();
+      const destino = document.getElementById("setor-destino").value.trim();
+      const quantidade = document.getElementById("quantidade").value.trim();
+
+      if (!produto || !origem || !destino || !quantidade) return;
+
+      const novaTransferencia = {
+        produto,
+        origem,
+        destino,
+        quantidade,
+        data: new Date().toLocaleString(),
+      };
+
+      const registros = JSON.parse(localStorage.getItem("transferencias")) || [];
+      registros.push(novaTransferencia);
+      localStorage.setItem("transferencias", JSON.stringify(registros));
+
+      form.reset();
+      carregarHistorico();
+    });
+
+    btnApagar.addEventListener("click", () => {
+      if (confirm("Tem certeza que deseja apagar todo o histórico?")) {
+        localStorage.removeItem("transferencias");
+        carregarHistorico();
+      }
+    });
+
+    carregarHistorico();
+  </script>
+</body>
+</html>
