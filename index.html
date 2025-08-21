@@ -1,244 +1,181 @@
 <!DOCTYPE html>
 <html lang="pt-br" class="dark">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Transferência de Produtos</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Transferência de Produtos</title>
 
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-    };
-  </script>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = { darkMode: "class" };
+    </script>
 
-  <!-- Tabler Icons -->
-  <link rel="stylesheet" href="https://unpkg.com/@tabler/icons-webfont/dist/tabler-icons.min.css"/>
+    <!-- Tabler Icons -->
+    <link rel="stylesheet" href="https://unpkg.com/@tabler/icons-webfont/dist/tabler-icons.min.css" />
 
-  <!-- Estilos personalizados -->
-  <style>
-    @keyframes fade-in {
-      from { opacity: 0; transform: scale(0.95); }
-      to { opacity: 1; transform: scale(1); }
-    }
-    .animate-fade-in {
-      animation: fade-in 0.3s ease-out forwards;
-    }
-  </style>
-</head>
-<body class="bg-gray-50 dark:bg-gray-900 min-h-screen text-gray-900 dark:text-gray-100 p-4 flex flex-col items-center">
+    <!-- Scanner (QR/Barcode) -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
-  <!-- TOGGLE DE TEMA -->
-  <div class="w-full max-w-md flex justify-end mb-2">
-    <button id="toggle-tema" class="text-xl text-yellow-500 dark:text-white hover:text-yellow-600 dark:hover:text-gray-300 transition">
-      <i class="ti ti-sun dark:ti ti-moon"></i>
-    </button>
-  </div>
+    <!-- Estilos -->
+    <style>
+      @keyframes fade-in { from { opacity: 0; transform: translateY(6px) scale(.98);} to { opacity: 1; transform: none; } }
+      .animate-fade-in { animation: fade-in .22s ease-out both; }
+      .focus-ring:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(59,130,246,.45); }
+      .btn-lg { padding: 14px 16px; font-size: 1.1rem; border-radius: .75rem; }
+      .chip { border-radius: 999px; padding: .25rem .6rem; border: 1px solid rgba(148,163,184,.5); }
+      [aria-invalid="true"]{ border-color:#ef4444 !important; box-shadow:0 0 0 2px rgba(239,68,68,.25); }
+    </style>
+  </head>
+  <body class="bg-gray-50 dark:bg-gray-900 min-h-screen text-gray-900 dark:text-gray-100 p-4 flex flex-col items-center">
 
-  <!-- CONTAINER PRINCIPAL -->
-  <div class="w-full max-w-md bg-white dark:bg-gray-800 rounded-lg shadow p-6 animate-fade-in">
-
-    <!-- Logo -->
-    <div class="flex justify-center mb-4">
-      <img src="logo.png" alt="Logo" class="h-12" onerror="this.style.display='none'" />
-    </div>
-
-    <!-- Título -->
-    <h1 class="text-2xl font-bold text-blue-700 dark:text-blue-400 mb-4 text-center flex items-center justify-center gap-2">
-      <i class="ti ti-transfer"></i> Transferência de Produtos
-    </h1>
-
-    <!-- Formulário -->
-    <form id="transfer-form" class="space-y-3">
-      <div id="produtos-lista" class="space-y-2">
-        <div class="flex gap-2">
-          <input type="text" placeholder="Produto" class="produto-input flex-1 border rounded px-3 py-2 text-base dark:bg-gray-700 dark:border-gray-600" required />
-          <input type="number" placeholder="Qtd" class="quantidade-input w-24 border rounded px-3 py-2 text-base dark:bg-gray-700 dark:border-gray-600" required />
+    <!-- Header -->
+    <header class="w-full max-w-md mb-5">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <img src="logo.png" alt="Logo" class="h-10 w-auto rounded" onerror="this.style.display='none'" />
+          <h1 class="text-2xl font-bold text-blue-700 dark:text-blue-400">Transferência de Produtos</h1>
         </div>
-      </div>
-      <button type="button" onclick="adicionarProduto()" class="text-sm text-blue-600 hover:text-blue-800 mt-2 flex items-center gap-1">
-        <i class="ti ti-plus"></i> Adicionar Produto
-      </button>
-
-      <div>
-        <label class="block text-sm font-medium mb-1">Setor de Origem</label>
-        <input type="text" id="setor-origem" placeholder="Ex: Almoxarifado"
-          class="w-full border rounded px-3 py-2 text-base dark:bg-gray-700 dark:border-gray-600" required />
-      </div>
-
-      <div>
-        <label class="block text-sm font-medium mb-1">Setor de Destino</label>
-        <input type="text" id="setor-destino" placeholder="Ex: Produção"
-          class="w-full border rounded px-3 py-2 text-base dark:bg-gray-700 dark:border-gray-600" required />
-      </div>
-
-      <button type="submit"
-        class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 text-lg rounded w-full flex items-center justify-center gap-2">
-        <i class="ti ti-arrow-right-arrow-left"></i> Transferir
-      </button>
-    </form>
-  </div>
-
-  <!-- Histórico -->
-  <div class="w-full max-w-md mt-6 animate-fade-in">
-    <div class="flex items-center justify-between mb-3">
-      <h2 class="text-xl font-semibold flex items-center gap-2 text-gray-800 dark:text-white">
-        <i class="ti ti-history text-blue-600 dark:text-blue-400"></i> Histórico
-      </h2>
-      <button id="btn-apagar" class="text-red-600 hover:text-red-800 dark:text-red-400 text-sm flex items-center gap-1">
-        <i class="ti ti-trash"></i> Apagar
-      </button>
-    </div>
-    <ul id="historico" class="space-y-2 text-sm"></ul>
-  </div>
-
-  <!-- Modal de Sucesso -->
-  <div id="modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden z-50">
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-sm p-6 mx-4 animate-fade-in">
-      <div class="text-center">
-        <h2 class="text-2xl font-bold text-green-700 dark:text-green-400 mb-3">✅ Transferência Concluída!</h2>
-        <p class="text-base text-gray-700 dark:text-gray-200 mb-5">Produtos transferidos com sucesso.</p>
-        <button id="fechar-modal" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-5 rounded text-base">
-          Fechar
+        <button id="toggle-tema" class="focus-ring inline-flex items-center justify-center h-10 w-10 rounded-xl bg-white/70 dark:bg-gray-800/70 shadow" title="Alternar tema" aria-label="Alternar tema">
+          <i id="tema-icone" class="ti ti-moon text-xl"></i>
         </button>
       </div>
-    </div>
-  </div>
+    </header>
 
-  <!-- Modal de Confirmação de Exclusão -->
-  <div id="modal-excluir" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden z-50">
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-sm p-6 mx-4 animate-fade-in">
-      <h2 class="text-xl font-bold text-red-600 dark:text-red-400 mb-4 text-center">Deseja apagar o histórico?</h2>
-      <p class="text-center text-gray-800 dark:text-gray-300 mb-6">Esta ação não poderá ser desfeita.</p>
-      <div class="flex justify-center gap-4">
-        <button id="cancelar-exclusao" class="bg-gray-300 dark:bg-gray-700 text-gray-800 dark:text-white font-semibold px-4 py-2 rounded hover:bg-gray-400 dark:hover:bg-gray-600">
-          Cancelar
-        </button>
-        <button id="confirmar-exclusao" class="bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded">
-          Apagar
-        </button>
-      </div>
-    </div>
-  </div>
+    <!-- Main -->
+    <main class="w-full max-w-md space-y-6">
+      <!-- Formulário -->
+      <section class="bg-white dark:bg-gray-800 rounded-2xl shadow p-5 animate-fade-in">
+        <form id="transfer-form" class="space-y-5" autocomplete="off">
+          <!-- Produtos -->
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <label class="block text-sm font-semibold">Produtos</label>
+              <div class="flex items-center gap-2">
+                <button type="button" id="btn-scan" class="focus-ring inline-flex items-center gap-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-3 py-2"><i class="ti ti-scan"></i> Ler código</button>
+                <button type="button" id="btn-add-produto" class="focus-ring inline-flex items-center gap-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-3 py-2"><i class="ti ti-plus"></i> Adicionar</button>
+              </div>
+            </div>
 
-  <!-- Script -->
-  <script>
-    const form = document.getElementById("transfer-form");
-    const historico = document.getElementById("historico");
-    const btnApagar = document.getElementById("btn-apagar");
-    const modal = document.getElementById("modal");
-    const btnFecharModal = document.getElementById("fechar-modal");
-    const toggleTema = document.getElementById("toggle-tema");
-    const modalExcluir = document.getElementById("modal-excluir");
-    const btnCancelarExclusao = document.getElementById("cancelar-exclusao");
-    const btnConfirmarExclusao = document.getElementById("confirmar-exclusao");
+            <!-- Chips -->
+            <div class="flex flex-wrap gap-2 mb-2">
+              <button class="chip text-xs" type="button" data-quick="ONT">ONT</button>
+              <button class="chip text-xs" type="button" data-quick="Roteador">Cabo Flat</button>
+              <button class="chip text-xs" type="button" data-quick="Cabo Drop 80m">Conector azul</button>
+              <button class="chip text-xs" type="button" data-quick="Conector SC/APC">Conector Verde</button>
+            </div>
 
-    function adicionarProduto() {
-      const container = document.getElementById("produtos-lista");
-      const div = document.createElement("div");
-      div.className = "flex gap-2";
-      div.innerHTML = `
-        <input type="text" placeholder="Produto" class="produto-input flex-1 border rounded px-3 py-2 text-base dark:bg-gray-700 dark:border-gray-600" required />
-        <input type="number" placeholder="Qtd" class="quantidade-input w-24 border rounded px-3 py-2 text-base dark:bg-gray-700 dark:border-gray-600" required />
-      `;
-      container.appendChild(div);
-    }
+            <div id="produtos-lista" class="space-y-2"></div>
 
-    function carregarHistorico() {
-      historico.innerHTML = "";
-      const registros = JSON.parse(localStorage.getItem("transferencias")) || [];
-      registros.reverse().forEach((registro, index) => {
-        const li = document.createElement("li");
-        li.className =
-          "bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 px-4 py-3 rounded shadow-md border border-gray-200 dark:border-gray-600 flex justify-between items-start animate-fade-in";
-        const itens = registro.produtos.map(p => `${p.nome} (${p.quantidade} unid)`).join(", ");
-        li.innerHTML = `
-          <span class="flex-1">${registro.data} - ${itens} | ${registro.origem} → ${registro.destino}</span>
-          <button onclick="editarTransferencia(${registros.length - 1 - index})" class="ml-2 text-blue-500 hover:text-blue-700">
-            <i class="ti ti-edit"></i>
-          </button>
-        `;
-        historico.appendChild(li);
-      });
-    }
+            <datalist id="cat-produtos">
+              <option>Alça apf</option>
+              <option>Alça Prf</option>
+              <option>Conector Verde</option>
+              <option>Conector azul</option>
+              <option>Splitter 1x8</option>
+              <option>Splitter 1x16</option>
+              
+            </datalist>
 
-    function mostrarModal() {
-      modal.classList.remove("hidden");
-      setTimeout(() => {
-        modal.classList.add("hidden");
-      }, 3000);
-    }
+            <p class="text-xs text-gray-500 mt-2">Dica: pressione <kbd class="px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700">Enter</kbd> na quantidade para criar outra linha.</p>
+          </div>
 
-    form.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const origem = document.getElementById("setor-origem").value.trim();
-      const destino = document.getElementById("setor-destino").value.trim();
-      const produtos = [];
-      document.querySelectorAll("#produtos-lista .flex").forEach(el => {
-        const nome = el.querySelector(".produto-input").value.trim();
-        const qtd = el.querySelector(".quantidade-input").value.trim();
-        if (nome && qtd) {
-          produtos.push({ nome, quantidade: qtd });
-        }
-      });
-      if (produtos.length === 0 || !origem || !destino) return;
-      const novaTransferencia = {
-        produtos,
-        origem,
-        destino,
-        data: new Date().toLocaleString(),
-      };
-      const registros = JSON.parse(localStorage.getItem("transferencias")) || [];
-      registros.push(novaTransferencia);
-      localStorage.setItem("transferencias", JSON.stringify(registros));
-      form.reset();
-      document.getElementById("produtos-lista").innerHTML = `
-        <div class="flex gap-2">
-          <input type="text" placeholder="Produto" class="produto-input flex-1 border rounded px-3 py-2 text-base dark:bg-gray-700 dark:border-gray-600" required />
-          <input type="number" placeholder="Qtd" class="quantidade-input w-24 border rounded px-3 py-2 text-base dark:bg-gray-700 dark:border-gray-600" required />
+          <!-- Origem/Destino -->
+          <div class="grid gap-3">
+            <div>
+              <label class="block text-sm font-semibold mb-1">Setor de Origem</label>
+              <select id="setor-origem" required class="focus-ring w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-base dark:bg-gray-700">
+                <option value="" disabled selected>Selecione…</option>
+                <option value="almox">Almoxarifado</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold mb-1">Setor de Destino</label>
+              <select id="setor-destino" required class="focus-ring w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-base dark:bg-gray-700">
+                <option value="" disabled selected>Selecione…</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Ações -->
+          <div class="flex flex-col gap-2">
+            <button type="submit" class="focus-ring bg-blue-600 hover:bg-blue-700 text-white font-semibold btn-lg w-full flex items-center justify-center gap-2">
+              <i class="ti ti-arrow-right-arrow-left"></i> Transferir
+            </button>
+            <button type="reset" id="btn-limpar" class="focus-ring bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 font-medium btn-lg w-full">Limpar formulário</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Histórico -->
+      <section class="bg-white dark:bg-gray-800 rounded-2xl shadow p-5 animate-fade-in">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-lg font-semibold flex items-center gap-2"><i class="ti ti-history text-blue-600 dark:text-blue-400"></i> Histórico</h2>
+          <div class="flex gap-2">
+            <button id="btn-export" class="focus-ring inline-flex items-center gap-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-3 py-2"><i class="ti ti-download"></i> Exportar CSV</button>
+            <button id="btn-apagar" class="focus-ring inline-flex items-center gap-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-semibold px-3 py-2"><i class="ti ti-trash"></i> Apagar tudo</button>
+          </div>
         </div>
-      `;
-      carregarHistorico();
-      mostrarModal();
-    });
+        <input id="busca" type="search" placeholder="Filtrar… (produto/origem/destino)" class="focus-ring w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 mb-3" />
+        <ul id="historico" class="space-y-2 text-sm"></ul>
+        <div id="vazio" class="hidden py-6 text-center text-sm text-gray-500">Nenhuma transferência registrada ainda.</div>
+      </section>
+    </main>
 
-    btnFecharModal.addEventListener("click", () => modal.classList.add("hidden"));
+    <!-- Template linha de produto -->
+    <template id="tpl-produto">
+      <div class="flex gap-2 group">
+        <input type="text" list="cat-produtos" placeholder="Produto" class="focus-ring produto-input flex-1 border rounded-lg px-3 py-2 dark:bg-gray-700" required />
+        <input type="number" placeholder="Qtd" min="1" class="focus-ring quantidade-input w-24 border rounded-lg px-3 py-2 dark:bg-gray-700" required />
+        <button type="button" class="focus-ring shrink-0 inline-flex items-center justify-center rounded-lg px-2 text-gray-500 hover:text-red-600" data-acao="remover"><i class="ti ti-minus"></i></button>
+      </div>
+    </template>
 
-    btnApagar.addEventListener("click", () => modalExcluir.classList.remove("hidden"));
-    btnCancelarExclusao.addEventListener("click", () => modalExcluir.classList.add("hidden"));
-    btnConfirmarExclusao.addEventListener("click", () => {
-      localStorage.removeItem("transferencias");
-      modalExcluir.classList.add("hidden");
-      carregarHistorico();
-    });
+    <!-- Script -->
+    <script>
+      const qs = (s,el=document)=>el.querySelector(s);
+      const qsa = (s,el=document)=>Array.from(el.querySelectorAll(s));
+      const STORAGE_KEY='transferencias';
 
-    toggleTema.addEventListener("click", () => {
-      document.documentElement.classList.toggle("dark");
-    });
+      const form=qs('#transfer-form'), lista=qs('#produtos-lista'), historico=qs('#historico'), vazio=qs('#vazio');
 
-    function editarTransferencia(index) {
-      const registros = JSON.parse(localStorage.getItem("transferencias")) || [];
-      const dados = registros[index];
-      document.getElementById("setor-origem").value = dados.origem;
-      document.getElementById("setor-destino").value = dados.destino;
-      const lista = document.getElementById("produtos-lista");
-      lista.innerHTML = "";
-      dados.produtos.forEach(prod => {
-        const div = document.createElement("div");
-        div.className = "flex gap-2";
-        div.innerHTML = `
-          <input type="text" value="${prod.nome}" class="produto-input flex-1 border rounded px-3 py-2 text-base dark:bg-gray-700 dark:border-gray-600" required />
-          <input type="number" value="${prod.quantidade}" class="quantidade-input w-24 border rounded px-3 py-2 text-base dark:bg-gray-700 dark:border-gray-600" required />
-        `;
-        lista.appendChild(div);
+      function criarLinhaProduto(values={nome:'',quantidade:''}){
+        const node=qs('#tpl-produto').content.firstElementChild.cloneNode(true);
+        const [inpNome,inpQtd]=qsa('input',node);
+        inpNome.value=values.nome||''; inpQtd.value=values.quantidade||'';
+        node.querySelector('[data-acao="remover"]').addEventListener('click',()=>{node.remove();if(!lista.children.length)adicionarProduto();});
+        return node;
+      }
+      function adicionarProduto(prefill){ lista.appendChild(criarLinhaProduto(prefill)); }
+      function coletarProdutos(){
+        return qsa('#produtos-lista .group').map(row=>{
+          const nome=row.querySelector('.produto-input').value.trim();
+          const qtd=row.querySelector('.quantidade-input').value.trim();
+          if(nome&&qtd>0)return{nome,quantidade:qtd};
+        }).filter(Boolean);
+      }
+      function salvarRegistro(dados){
+        const registros=JSON.parse(localStorage.getItem(STORAGE_KEY))||[];
+        registros.push({...dados,data:new Date().toLocaleString()});
+        localStorage.setItem(STORAGE_KEY,JSON.stringify(registros));
+        renderHistorico();
+      }
+      function renderHistorico(){
+        historico.innerHTML='';const regs=JSON.parse(localStorage.getItem(STORAGE_KEY))||[];
+        if(!regs.length){vazio.classList.remove('hidden');return;}vazio.classList.add('hidden');
+        regs.forEach(r=>{const li=document.createElement('li');li.className='bg-gray-100 dark:bg-gray-700 p-3 rounded';
+          li.innerHTML=`<div class="font-semibold">${r.origem} → ${r.destino}</div><div>${r.produtos.map(p=>`${p.nome} (${p.quantidade})`).join(', ')}</div><div class="text-xs text-gray-500">${r.data}</div>`;
+          historico.appendChild(li);});
+      }
+      form.addEventListener('submit',e=>{
+        e.preventDefault();
+        const origem=qs('#setor-origem').value,destino=qs('#setor-destino').value,produtos=coletarProdutos();
+        if(!origem||!destino||!produtos.length)return;
+        salvarRegistro({origem,destino,produtos});
+        form.reset();lista.innerHTML='';adicionarProduto();
       });
-      registros.splice(index, 1);
-      localStorage.setItem("transferencias", JSON.stringify(registros));
-      carregarHistorico();
-    }
-
-    carregarHistorico();
-  </script>
-</body>
+      qs('#btn-add-produto').addEventListener('click',()=>adicionarProduto());
+      adicionarProduto();renderHistorico();
+    </script>
+  </body>
 </html>
