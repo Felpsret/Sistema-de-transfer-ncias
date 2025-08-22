@@ -1,181 +1,522 @@
-<!DOCTYPE html>
-<html lang="pt-br" class="dark">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Transferência de Produtos</title>
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Transferências de Produtos</title>
+  <style>
+    :root{
+      --bg: #f6f9ff; --bg2:#ffffff; --text:#0f172a; --muted:#64748b;
+      --primary:#2563eb; --primary-700:#1d4ed8; --primary-50:#eff6ff;
+      --border:#dbeafe; --card: rgba(255,255,255,.8); --shadow: 0 8px 24px rgba(2, 6, 23, 0.08);
+    }
+    .dark:root{ --bg:#0b1220; --bg2:#0b1220; --text:#e5e7eb; --muted:#94a3b8; --primary:#60a5fa; --primary-700:#3b82f6; --primary-50:#0b203e; --border:#1f2a44; --card: rgba(15, 23, 42, .6); --shadow: 0 10px 28px rgba(0,0,0,.35); }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial; color:var(--text); background:linear-gradient(180deg, #eef2ff 0%, var(--bg) 40%, var(--bg2) 100%);} 
+    .container{max-width:1100px;margin-inline:auto;padding:24px}
+    header{display:flex;gap:16px;align-items:center;justify-content:space-between;margin-bottom:20px}
+    .title{font-size:clamp(24px, 2.5vw, 36px);font-weight:800;background:linear-gradient(90deg,#1e3a8a,#60a5fa);-webkit-background-clip:text;background-clip:text;color:transparent}
+    .subtitle{color:var(--muted)}
+    .btn{display:inline-flex;align-items:center;gap:8px;border:none;border-radius:12px;padding:10px 14px;background:var(--primary);color:#fff;font-weight:600;cursor:pointer;box-shadow:var(--shadow);transition:.18s transform, .18s opacity, .18s filter}
+    .btn:hover{transform:translateY(-1px);}
+    .btn.ghost{background:transparent;color:var(--primary);border:1px solid var(--border)}
+    .btn.subtle{background:var(--primary-50);color:#0b3b88;border:1px solid var(--border)}
+    .btn.danger{background:#e11d48}
 
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = { darkMode: "class" };
-    </script>
+    .tabs{display:inline-flex;background:var(--card);backdrop-filter:blur(8px);border:1px solid var(--border);padding:6px;border-radius:18px;box-shadow:var(--shadow)}
+    .tab{padding:8px 14px;border-radius:12px;font-weight:600;color:#0b3b88;cursor:pointer;border:1px solid transparent}
+    .tab.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+    .tab:not(.active):hover{background:var(--primary-50)}
 
-    <!-- Tabler Icons -->
-    <link rel="stylesheet" href="https://unpkg.com/@tabler/icons-webfont/dist/tabler-icons.min.css" />
+    .grid{display:grid;gap:18px}
+    .grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+    @media (max-width: 900px){.grid-2,.grid-3{grid-template-columns:1fr}}
 
-    <!-- Scanner (QR/Barcode) -->
-    <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+    .card{background:var(--card);backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:18px;padding:18px;box-shadow:var(--shadow)}
+    .card h3{margin:0 0 12px 0;color:#113d8f}
 
-    <!-- Estilos -->
-    <style>
-      @keyframes fade-in { from { opacity: 0; transform: translateY(6px) scale(.98);} to { opacity: 1; transform: none; } }
-      .animate-fade-in { animation: fade-in .22s ease-out both; }
-      .focus-ring:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(59,130,246,.45); }
-      .btn-lg { padding: 14px 16px; font-size: 1.1rem; border-radius: .75rem; }
-      .chip { border-radius: 999px; padding: .25rem .6rem; border: 1px solid rgba(148,163,184,.5); }
-      [aria-invalid="true"]{ border-color:#ef4444 !important; box-shadow:0 0 0 2px rgba(239,68,68,.25); }
-    </style>
-  </head>
-  <body class="bg-gray-50 dark:bg-gray-900 min-h-screen text-gray-900 dark:text-gray-100 p-4 flex flex-col items-center">
+    label{display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--text)}
+    input,select,textarea{width:100%;padding:10px 12px;border-radius:12px;border:1px solid var(--border);background:#fff;color:#0f172a;outline:none}
+    .dark input,.dark select,.dark textarea{background:#0b1220;color:var(--text)}
+    input:focus,select:focus,textarea:focus{box-shadow:0 0 0 2px var(--primary-700)}
+    textarea{min-height:90px}
 
-    <!-- Header -->
-    <header class="w-full max-w-md mb-5">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <img src="logo.png" alt="Logo" class="h-10 w-auto rounded" onerror="this.style.display='none'" />
-          <h1 class="text-2xl font-bold text-blue-700 dark:text-blue-400">Transferência de Produtos</h1>
-        </div>
-        <button id="toggle-tema" class="focus-ring inline-flex items-center justify-center h-10 w-10 rounded-xl bg-white/70 dark:bg-gray-800/70 shadow" title="Alternar tema" aria-label="Alternar tema">
-          <i id="tema-icone" class="ti ti-moon text-xl"></i>
-        </button>
+    table{width:100%;border-collapse:collapse;font-size:14px}
+    th,td{padding:10px 8px;text-align:left;vertical-align:top}
+    thead th{color:#64748b}
+    tbody tr{border-top:1px solid var(--border)}
+
+    .tag{display:inline-flex;align-items:center;gap:6px;background:var(--primary-50);border:1px solid var(--border);color:#0b3b88;border-radius:999px;font-size:12px;padding:4px 10px}
+
+    .toolbar{display:flex;gap:10px;align-items:center}
+    .search{min-width:250px}
+
+    /* Modal */
+    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(2,6,23,.55);padding:24px}
+    .modal.open{display:flex}
+    .modal-card{max-width:800px;width:100%;background:var(--card);border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow);padding:18px}
+
+    .row{display:flex;gap:12px;align-items:center}
+    .items-list{display:grid;gap:8px}
+    .muted{color:var(--muted)}
+    .inline-help{font-size:12px;color:var(--muted)}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <div class="title">Transferências de Produtos</div>
+        <div class="subtitle">Agora você pode <b>digitar</b> nos campos de setor e produto (com sugestões).</div>
+      </div>
+      <div class="toolbar">
+        <button id="themeBtn" class="btn ghost" title="Alternar tema">🌙 Escuro</button>
       </div>
     </header>
 
-    <!-- Main -->
-    <main class="w-full max-w-md space-y-6">
-      <!-- Formulário -->
-      <section class="bg-white dark:bg-gray-800 rounded-2xl shadow p-5 animate-fade-in">
-        <form id="transfer-form" class="space-y-5" autocomplete="off">
-          <!-- Produtos -->
-          <div>
-            <div class="flex items-center justify-between mb-2">
-              <label class="block text-sm font-semibold">Produtos</label>
-              <div class="flex items-center gap-2">
-                <button type="button" id="btn-scan" class="focus-ring inline-flex items-center gap-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-3 py-2"><i class="ti ti-scan"></i> Ler código</button>
-                <button type="button" id="btn-add-produto" class="focus-ring inline-flex items-center gap-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-3 py-2"><i class="ti ti-plus"></i> Adicionar</button>
-              </div>
-            </div>
+    <nav style="margin-bottom:16px">
+      <div class="tabs">
+        <button class="tab active" data-tab="transfers">Transferências</button>
+        <button class="tab" data-tab="products">Produtos</button>
+        <button class="tab" data-tab="sectors">Setores</button>
+      </div>
+    </nav>
 
-            <!-- Chips -->
-            <div class="flex flex-wrap gap-2 mb-2">
-              <button class="chip text-xs" type="button" data-quick="ONT">ONT</button>
-              <button class="chip text-xs" type="button" data-quick="Roteador">Cabo Flat</button>
-              <button class="chip text-xs" type="button" data-quick="Cabo Drop 80m">Conector azul</button>
-              <button class="chip text-xs" type="button" data-quick="Conector SC/APC">Conector Verde</button>
-            </div>
+    <section id="view-transfers" class="grid">
+      <div class="card">
+        <h3>Nova transferência</h3>
+        <form id="createTransfer" class="grid grid-3">
+          <label>
+            <span>Do setor (opcional)</span>
+            <input list="sectorList" id="fromSectorInput" placeholder="Digite ou escolha…" />
+            <span class="inline-help">Digite o nome do setor ou selecione na lista.</span>
+          </label>
+          <label>
+            <span>Para o setor</span>
+            <input list="sectorList" id="toSectorInput" placeholder="Digite ou escolha…" required />
+          </label>
+          <div></div>
 
-            <div id="produtos-lista" class="space-y-2"></div>
-
-            <datalist id="cat-produtos">
-              <option>Alça apf</option>
-              <option>Alça Prf</option>
-              <option>Conector Verde</option>
-              <option>Conector azul</option>
-              <option>Splitter 1x8</option>
-              <option>Splitter 1x16</option>
-              
-            </datalist>
-
-            <p class="text-xs text-gray-500 mt-2">Dica: pressione <kbd class="px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700">Enter</kbd> na quantidade para criar outra linha.</p>
+          <label>
+            <span>Produto</span>
+            <input list="productList" id="productInput" placeholder="Digite ou escolha…" />
+          </label>
+          <label>
+            <span>Quantidade</span>
+            <input type="number" id="qtyInput" min="1" />
+          </label>
+          <div style="display:flex;align-items:end">
+            <button type="button" id="addItemBtn" class="btn subtle">Adicionar item</button>
           </div>
 
-          <!-- Origem/Destino -->
-          <div class="grid gap-3">
-            <div>
-              <label class="block text-sm font-semibold mb-1">Setor de Origem</label>
-              <select id="setor-origem" required class="focus-ring w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-base dark:bg-gray-700">
-                <option value="" disabled selected>Selecione…</option>
-                <option value="almox">Almoxarifado</option>
-              </select>
+          <div class="grid" style="grid-column:1 / -1">
+            <div id="draftItems"></div>
+            <label>
+              <span>Observação (opcional)</span>
+              <textarea id="note"></textarea>
+            </label>
+            <div class="row">
+              <button class="btn" type="submit">Salvar transferência</button>
+              <button class="btn ghost" type="button" id="clearDraft">Limpar</button>
+              <span class="tag" id="itemsTag">0 item(s)</span>
             </div>
-            <div>
-              <label class="block text-sm font-semibold mb-1">Setor de Destino</label>
-              <select id="setor-destino" required class="focus-ring w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-base dark:bg-gray-700">
-                <option value="" disabled selected>Selecione…</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Ações -->
-          <div class="flex flex-col gap-2">
-            <button type="submit" class="focus-ring bg-blue-600 hover:bg-blue-700 text-white font-semibold btn-lg w-full flex items-center justify-center gap-2">
-              <i class="ti ti-arrow-right-arrow-left"></i> Transferir
-            </button>
-            <button type="reset" id="btn-limpar" class="focus-ring bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 font-medium btn-lg w-full">Limpar formulário</button>
           </div>
         </form>
-      </section>
+      </div>
 
-      <!-- Histórico -->
-      <section class="bg-white dark:bg-gray-800 rounded-2xl shadow p-5 animate-fade-in">
-        <div class="flex items-center justify-between mb-3">
-          <h2 class="text-lg font-semibold flex items-center gap-2"><i class="ti ti-history text-blue-600 dark:text-blue-400"></i> Histórico</h2>
-          <div class="flex gap-2">
-            <button id="btn-export" class="focus-ring inline-flex items-center gap-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-3 py-2"><i class="ti ti-download"></i> Exportar CSV</button>
-            <button id="btn-apagar" class="focus-ring inline-flex items-center gap-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-semibold px-3 py-2"><i class="ti ti-trash"></i> Apagar tudo</button>
+      <div class="card">
+        <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:8px">
+          <h3 style="margin:0">Transferências</h3>
+          <label class="search">
+            <span>Buscar</span>
+            <input id="searchInput" placeholder="por setor, produto ou observação…" />
+          </label>
+        </div>
+        <div style="overflow:auto">
+          <table>
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>De</th>
+                <th>Para</th>
+                <th>Itens</th>
+                <th>Obs.</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="transfersTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="view-products" class="grid" style="display:none">
+      <div class="card">
+        <h3>Novo produto</h3>
+        <form id="createProduct" class="grid grid-3">
+          <label>
+            <span>Nome</span>
+            <input id="prodName" placeholder="Ex.: Cabo HDMI 1.5m" />
+          </label>
+          <label>
+            <span>SKU (opcional)</span>
+            <input id="prodSku" placeholder="Ex.: CAB-HDMI-15" />
+          </label>
+          <div style="display:flex;align-items:end">
+            <button class="btn" type="submit">Adicionar</button>
+          </div>
+        </form>
+      </div>
+      <div class="card">
+        <h3 id="prodCount">Produtos</h3>
+        <div style="overflow:auto">
+          <table>
+            <thead><tr><th>Nome</th><th>SKU</th><th>Ações</th></tr></thead>
+            <tbody id="productsTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="view-sectors" class="grid" style="display:none">
+      <div class="card">
+        <h3>Novo setor</h3>
+        <form id="createSector" class="grid grid-3">
+          <label>
+            <span>Nome do setor</span>
+            <input id="sectorName" placeholder="Ex.: Expedição" />
+          </label>
+          <div style="grid-column:span 2; display:flex;align-items:end;gap:10px">
+            <button class="btn" type="submit">Adicionar</button>
+          </div>
+        </form>
+      </div>
+      <div class="card">
+        <h3 id="sectCount">Setores</h3>
+        <div style="overflow:auto">
+          <table>
+            <thead><tr><th>Nome</th><th>Ações</th></tr></thead>
+            <tbody id="sectorsTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Datalists compartilhados -->
+  <datalist id="sectorList"></datalist>
+  <datalist id="productList"></datalist>
+
+  <!-- Modal de Edição de Transferência -->
+  <div class="modal" id="editModal" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal-card">
+      <div class="row" style="justify-content:space-between">
+        <h3 style="margin:0">Editar transferência</h3>
+        <button class="btn ghost" id="closeModal">Fechar</button>
+      </div>
+      <div class="grid grid-3" style="margin-top:10px">
+        <label>
+          <span>De</span>
+          <input list="sectorList" id="editFromInput" placeholder="Digite ou escolha…" />
+        </label>
+        <label>
+          <span>Para</span>
+          <input list="sectorList" id="editToInput" placeholder="Digite ou escolha…" />
+        </label>
+        <div></div>
+        <div class="grid" style="grid-column:1 / -1; gap:10px">
+          <div class="row">
+            <label style="flex:1">
+              <span>Produto</span>
+              <input list="productList" id="editProdInput" placeholder="Digite ou escolha…" />
+            </label>
+            <label style="width:160px">
+              <span>Qtd</span>
+              <input type="number" id="editQty" min="1" />
+            </label>
+            <button class="btn subtle" id="editAddItem">Adicionar item</button>
+          </div>
+
+          <div class="items-list" id="editItems"></div>
+
+          <label>
+            <span>Observação</span>
+            <textarea id="editNote"></textarea>
+          </label>
+
+          <div class="row">
+            <button class="btn" id="saveEdit">Salvar alterações</button>
+            <button class="btn ghost" id="cancelEdit">Cancelar</button>
           </div>
         </div>
-        <input id="busca" type="search" placeholder="Filtrar… (produto/origem/destino)" class="focus-ring w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 mb-3" />
-        <ul id="historico" class="space-y-2 text-sm"></ul>
-        <div id="vazio" class="hidden py-6 text-center text-sm text-gray-500">Nenhuma transferência registrada ainda.</div>
-      </section>
-    </main>
-
-    <!-- Template linha de produto -->
-    <template id="tpl-produto">
-      <div class="flex gap-2 group">
-        <input type="text" list="cat-produtos" placeholder="Produto" class="focus-ring produto-input flex-1 border rounded-lg px-3 py-2 dark:bg-gray-700" required />
-        <input type="number" placeholder="Qtd" min="1" class="focus-ring quantidade-input w-24 border rounded-lg px-3 py-2 dark:bg-gray-700" required />
-        <button type="button" class="focus-ring shrink-0 inline-flex items-center justify-center rounded-lg px-2 text-gray-500 hover:text-red-600" data-acao="remover"><i class="ti ti-minus"></i></button>
       </div>
-    </template>
+    </div>
+  </div>
 
-    <!-- Script -->
-    <script>
-      const qs = (s,el=document)=>el.querySelector(s);
-      const qsa = (s,el=document)=>Array.from(el.querySelectorAll(s));
-      const STORAGE_KEY='transferencias';
+<script>
+(function(){
+  // ===== Util =====
+  const $ = (sel, el=document) => el.querySelector(sel);
+  const $$ = (sel, el=document) => Array.from(el.querySelectorAll(sel));
+  const uid = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36)+Math.random().toString(36).slice(2));
+  const fmt = (iso) => new Date(iso).toLocaleString('pt-BR');
 
-      const form=qs('#transfer-form'), lista=qs('#produtos-lista'), historico=qs('#historico'), vazio=qs('#vazio');
+  const storage = { get(k, fb){ try{ return JSON.parse(localStorage.getItem(k)) ?? fb }catch{ return fb } }, set(k,v){ localStorage.setItem(k, JSON.stringify(v)) } };
 
-      function criarLinhaProduto(values={nome:'',quantidade:''}){
-        const node=qs('#tpl-produto').content.firstElementChild.cloneNode(true);
-        const [inpNome,inpQtd]=qsa('input',node);
-        inpNome.value=values.nome||''; inpQtd.value=values.quantidade||'';
-        node.querySelector('[data-acao="remover"]').addEventListener('click',()=>{node.remove();if(!lista.children.length)adicionarProduto();});
-        return node;
-      }
-      function adicionarProduto(prefill){ lista.appendChild(criarLinhaProduto(prefill)); }
-      function coletarProdutos(){
-        return qsa('#produtos-lista .group').map(row=>{
-          const nome=row.querySelector('.produto-input').value.trim();
-          const qtd=row.querySelector('.quantidade-input').value.trim();
-          if(nome&&qtd>0)return{nome,quantidade:qtd};
-        }).filter(Boolean);
-      }
-      function salvarRegistro(dados){
-        const registros=JSON.parse(localStorage.getItem(STORAGE_KEY))||[];
-        registros.push({...dados,data:new Date().toLocaleString()});
-        localStorage.setItem(STORAGE_KEY,JSON.stringify(registros));
-        renderHistorico();
-      }
-      function renderHistorico(){
-        historico.innerHTML='';const regs=JSON.parse(localStorage.getItem(STORAGE_KEY))||[];
-        if(!regs.length){vazio.classList.remove('hidden');return;}vazio.classList.add('hidden');
-        regs.forEach(r=>{const li=document.createElement('li');li.className='bg-gray-100 dark:bg-gray-700 p-3 rounded';
-          li.innerHTML=`<div class="font-semibold">${r.origem} → ${r.destino}</div><div>${r.produtos.map(p=>`${p.nome} (${p.quantidade})`).join(', ')}</div><div class="text-xs text-gray-500">${r.data}</div>`;
-          historico.appendChild(li);});
-      }
-      form.addEventListener('submit',e=>{
-        e.preventDefault();
-        const origem=qs('#setor-origem').value,destino=qs('#setor-destino').value,produtos=coletarProdutos();
-        if(!origem||!destino||!produtos.length)return;
-        salvarRegistro({origem,destino,produtos});
-        form.reset();lista.innerHTML='';adicionarProduto();
+  // ===== Estado =====
+  let products = storage.get('data.products', [ {id: uid(), name: 'Cabo RJ45 2m', sku:'CAB-RJ45-2'}, {id: uid(), name: 'Roteador AC1200', sku:'RTR-AC1200'} ]);
+  let sectors = storage.get('data.sectors', [ {id: uid(), name: 'Almoxarifado'}, {id: uid(), name: 'Instalações'}, {id: uid(), name: 'Suporte'} ]);
+  let transfers = storage.get('data.transfers', []);
+  let currentTab = storage.get('ux.tab','transfers');
+  let dark = storage.get('ux.dark', false);
+
+  if(dark) document.documentElement.classList.add('dark');
+  $('#themeBtn').textContent = dark ? '☀️ Claro' : '🌙 Escuro';
+
+  function saveAll(){ storage.set('data.products', products); storage.set('data.sectors', sectors); storage.set('data.transfers', transfers); }
+
+  // ===== Helpers =====
+  const sectorByName = (name) => sectors.find(s => s.name.toLowerCase() === String(name||'').trim().toLowerCase());
+  const productByName = (name) => products.find(p => p.name.toLowerCase() === String(name||'').trim().toLowerCase());
+  const sectorName = (id) => sectors.find(s=>s.id===id)?.name || '-';
+  const productName = (id) => products.find(p=>p.id===id)?.name || id;
+
+  function getOrCreateSector(name){
+    const n = String(name||'').trim(); if(!n) return '';
+    let s = sectorByName(n); if(s) return s.id;
+    s = {id: uid(), name: n}; sectors.push(s); saveAll(); renderSectors(); return s.id;
+  }
+  function getOrCreateProduct(name){
+    const n = String(name||'').trim(); if(!n) return '';
+    let p = productByName(n); if(p) return p.id;
+    p = {id: uid(), name: n}; products.push(p); saveAll(); renderProducts(); return p.id;
+  }
+
+  // ===== Datalists =====
+  function fillDatalist(listEl, arr){
+    listEl.innerHTML = '';
+    arr.forEach(o => { const opt = document.createElement('option'); opt.value = o.name + (o.sku?` (${o.sku})`: ''); listEl.appendChild(opt); });
+  }
+
+  // ===== Tabs =====
+  function switchTab(id){ currentTab = id; storage.set('ux.tab', id); $$('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===id)); $('#view-transfers').style.display = id==='transfers' ? '' : 'none'; $('#view-products').style.display = id==='products' ? '' : 'none'; $('#view-sectors').style.display = id==='sectors' ? '' : 'none'; }
+  $$('.tab').forEach(t=> t.addEventListener('click', ()=> switchTab(t.dataset.tab)));
+  switchTab(currentTab);
+
+  // ===== Tema =====
+  $('#themeBtn').addEventListener('click', ()=>{ dark = !dark; storage.set('ux.dark', dark); document.documentElement.classList.toggle('dark', dark); $('#themeBtn').textContent = dark ? '☀️ Claro' : '🌙 Escuro'; });
+
+  // ===== Render Produtos =====
+  function renderProducts(){
+    $('#prodCount').textContent = `Produtos (${products.length})`;
+    const tbody = $('#productsTbody'); tbody.innerHTML = '';
+    products.forEach(p=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><input data-k="name" value="${escapeHtml(p.name)}" /></td>
+        <td><input data-k="sku" value="${escapeHtml(p.sku||'')}" /></td>
+        <td class="row">
+          <button class="btn subtle" data-act="save">Salvar</button>
+          <button class="btn danger" data-act="del">Excluir</button>
+        </td>`;
+      tr.querySelector('[data-act="save"]').addEventListener('click',()=>{
+        const name = tr.querySelector('[data-k="name"]').value.trim();
+        const sku  = tr.querySelector('[data-k="sku"]').value.trim();
+        if(!name) return alert('Nome obrigatório');
+        p.name = name; p.sku = sku || undefined; saveAll(); renderAll();
       });
-      qs('#btn-add-produto').addEventListener('click',()=>adicionarProduto());
-      adicionarProduto();renderHistorico();
-    </script>
-  </body>
+      tr.querySelector('[data-act="del"]').addEventListener('click',()=>{
+        if(!confirm('Excluir produto?')) return;
+        products = products.filter(x=>x.id!==p.id); saveAll(); renderAll();
+      });
+      tbody.appendChild(tr);
+    });
+    fillDatalist($('#productList'), products);
+  }
+
+  $('#createProduct').addEventListener('submit', (e)=>{
+    e.preventDefault();
+    const name = $('#prodName').value.trim(); const sku  = $('#prodSku').value.trim();
+    if(!name) return alert('Informe o nome');
+    products.push({id:uid(), name, sku: sku || undefined});
+    $('#prodName').value=''; $('#prodSku').value=''; saveAll(); renderAll();
+  });
+
+  // ===== Render Setores =====
+  function renderSectors(){
+    $('#sectCount').textContent = `Setores (${sectors.length})`;
+    const tbody = $('#sectorsTbody'); tbody.innerHTML = '';
+    sectors.forEach(s=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><input data-k="name" value="${escapeHtml(s.name)}" /></td>
+        <td class="row">
+          <button class="btn subtle" data-act="save">Salvar</button>
+          <button class="btn danger" data-act="del">Excluir</button>
+        </td>`;
+      tr.querySelector('[data-act="save"]').addEventListener('click',()=>{
+        const name = tr.querySelector('[data-k="name"]').value.trim();
+        if(!name) return alert('Nome obrigatório');
+        s.name = name; saveAll(); renderAll();
+      });
+      tr.querySelector('[data-act="del"]').addEventListener('click',()=>{
+        if(!confirm('Excluir setor?')) return;
+        sectors = sectors.filter(x=>x.id!==s.id); saveAll(); renderAll();
+      });
+      tbody.appendChild(tr);
+    });
+    fillDatalist($('#sectorList'), sectors);
+  }
+
+  $('#createSector').addEventListener('submit', (e)=>{
+    e.preventDefault();
+    const name = $('#sectorName').value.trim(); if(!name) return alert('Informe o nome do setor');
+    sectors.push({id:uid(), name}); $('#sectorName').value=''; saveAll(); renderAll();
+  });
+
+  // ===== Draft de Transferência =====
+  let draft = { fromSectorId:'', toSectorId: sectors[0]?.id || '', items:[], note:'' };
+
+  function renderDraft(){
+    $('#itemsTag').textContent = `${draft.items.length} item(s)`;
+    const wrap = $('#draftItems'); wrap.innerHTML = '';
+    draft.items.forEach((it, idx)=>{
+      const row = document.createElement('div'); row.className = 'row';
+      row.innerHTML = `
+        <input list="productList" data-k="pname" value="${escapeHtml(productName(it.productId))}" placeholder="Produto" style="flex:1" />
+        <input type="number" min="1" value="${it.qty}" data-k="qty" style="width:120px" />
+        <button class="btn ghost" data-act="rem">Remover</button>`;
+      const nameInput = row.querySelector('[data-k="pname"]');
+      nameInput.addEventListener('change', e=>{ it.productId = getOrCreateProduct(e.target.value); saveAll(); renderProducts(); });
+      row.querySelector('[data-k="qty"]').addEventListener('input', e=>{ it.qty = Number(e.target.value)||1; });
+      row.querySelector('[data-act="rem"]').addEventListener('click', ()=>{ draft.items.splice(idx,1); renderDraft(); });
+      wrap.appendChild(row);
+    });
+
+    $('#fromSectorInput').value = draft.fromSectorId ? sectorName(draft.fromSectorId) : '';
+    $('#toSectorInput').value = draft.toSectorId ? sectorName(draft.toSectorId) : '';
+    $('#note').value = draft.note || '';
+  }
+
+  $('#addItemBtn').addEventListener('click', ()=>{
+    const pname = $('#productInput').value; const q = Number($('#qtyInput').value);
+    if(!pname || !q) return alert('Informe produto e quantidade');
+    const pid = getOrCreateProduct(pname);
+    if(draft.items.some(i=>i.productId===pid)) return alert('Produto já adicionado');
+    draft.items.push({productId: pid, qty: q});
+    $('#productInput').value = ''; $('#qtyInput').value = '';
+    renderDraft();
+  });
+
+  $('#clearDraft').addEventListener('click', ()=>{ draft = { fromSectorId:'', toSectorId: sectors[0]?.id || '', items:[], note:'' }; renderDraft(); });
+
+  $('#fromSectorInput').addEventListener('change', e=>{ draft.fromSectorId = getOrCreateSector(e.target.value) || ''; });
+  $('#toSectorInput').addEventListener('change', e=>{ draft.toSectorId = getOrCreateSector(e.target.value); });
+  $('#note').addEventListener('input', e=> draft.note = e.target.value);
+
+  $('#createTransfer').addEventListener('submit', (e)=>{
+    e.preventDefault();
+    if(!draft.toSectorId) return alert('Informe o setor de destino');
+    if(draft.items.length===0) return alert('Adicione pelo menos um item');
+    const t = { id: uid(), date: new Date().toISOString(), fromSectorId: draft.fromSectorId || undefined, toSectorId: draft.toSectorId, items: draft.items.map(i=>({productId:i.productId, qty:Number(i.qty)||1})), note: (draft.note||'').trim() || undefined };
+    transfers.unshift(t); saveAll(); draft = { fromSectorId:'', toSectorId: sectors[0]?.id || '', items:[], note:'' }; renderDraft(); renderTransfers();
+  });
+
+  // ===== Lista de Transferências =====
+  let search = '';
+  $('#searchInput').addEventListener('input', e=>{ search = e.target.value.toLowerCase(); renderTransfers(); });
+
+  function renderTransfers(){
+    const tbody = $('#transfersTbody'); tbody.innerHTML = '';
+    const match = t => {
+      if(!search) return true;
+      const sect = (id)=> sectors.find(s=>s.id===id)?.name.toLowerCase()||'';
+      const has = (s)=> s && s.toLowerCase().includes(search);
+      const anyItem = t.items.some(i => has(productName(i.productId)));
+      return has(t.note||'') || has(sect(t.toSectorId)) || has(sect(t.fromSectorId)) || anyItem;
+    };
+
+    transfers
+      .slice().sort((a,b)=> new Date(b.date)-new Date(a.date))
+      .filter(match)
+      .forEach(t=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${fmt(t.date)}</td>
+          <td>${escapeHtml(sectorName(t.fromSectorId))}</td>
+          <td>${escapeHtml(sectorName(t.toSectorId))}</td>
+          <td>${t.items.map(i=>`${escapeHtml(productName(i.productId))} — <b>${i.qty}</b>`).join('<br>')}</td>
+          <td class="muted">${escapeHtml(t.note||'-')}</td>
+          <td class="row">
+            <button class="btn subtle" data-act="edit">Editar</button>
+            <button class="btn danger" data-act="del">Excluir</button>
+          </td>`;
+        tr.querySelector('[data-act="edit"]').addEventListener('click', ()=> openEdit(t.id));
+        tr.querySelector('[data-act="del"]').addEventListener('click', ()=>{ if(!confirm('Excluir transferência?')) return; transfers = transfers.filter(x=>x.id!==t.id); saveAll(); renderTransfers(); });
+        tbody.appendChild(tr);
+      });
+  }
+
+  // ===== Modal de Edição =====
+  let editingId = null;
+
+  function openEdit(id){
+    editingId = id; const t = transfers.find(x=>x.id===id); if(!t) return;
+    $('#editFromInput').value = t.fromSectorId ? sectorName(t.fromSectorId) : '';
+    $('#editToInput').value = sectorName(t.toSectorId);
+    $('#editNote').value = t.note || '';
+    renderEditItems(t);
+    $('#editModal').classList.add('open');
+  }
+
+  function renderEditItems(t){
+    const wrap = $('#editItems'); wrap.innerHTML = '';
+    t.items.forEach((i, idx)=>{
+      const row = document.createElement('div'); row.className = 'row';
+      row.innerHTML = `
+        <input list="productList" data-k="pname" value="${escapeHtml(productName(i.productId))}" placeholder="Produto" style="flex:1" />
+        <input type="number" min="1" value="${i.qty}" data-k="qty" style="width:120px" />
+        <button class="btn ghost" data-act="rem">Remover</button>`;
+      const nameInput = row.querySelector('[data-k="pname"]');
+      nameInput.addEventListener('change', e=>{ i.productId = getOrCreateProduct(e.target.value); saveAll(); renderProducts(); });
+      row.querySelector('[data-k="qty"]').addEventListener('input', e=>{ i.qty = Number(e.target.value)||1; });
+      row.querySelector('[data-act="rem"]').addEventListener('click', ()=>{ t.items.splice(idx,1); renderEditItems(t); });
+      wrap.appendChild(row);
+    });
+  }
+
+  $('#editAddItem').addEventListener('click', ()=>{
+    const t = transfers.find(x=>x.id===editingId); if(!t) return;
+    const pname = $('#editProdInput').value; const q = Number($('#editQty').value);
+    if(!pname || !q) return alert('Informe produto e quantidade');
+    const pid = getOrCreateProduct(pname);
+    if(t.items.some(i=>i.productId===pid)) return alert('Produto já adicionado');
+    t.items.push({productId: pid, qty: q}); $('#editProdInput').value=''; $('#editQty').value=''; renderEditItems(t);
+  });
+
+  $('#saveEdit').addEventListener('click', ()=>{
+    const t = transfers.find(x=>x.id===editingId); if(!t) return;
+    t.fromSectorId = getOrCreateSector($('#editFromInput').value) || undefined;
+    t.toSectorId = getOrCreateSector($('#editToInput').value);
+    t.note = ($('#editNote').value||'').trim() || undefined;
+    t.items = t.items.map(i=>({productId:i.productId, qty:Number(i.qty)||0})).filter(i=>i.qty>0);
+    saveAll(); renderTransfers(); closeModal();
+  });
+
+  function closeModal(){ $('#editModal').classList.remove('open'); editingId=null; }
+  $('#closeModal').addEventListener('click', closeModal);
+  $('#cancelEdit').addEventListener('click', closeModal);
+  $('#editModal').addEventListener('click', (e)=>{ if(e.target.id==='editModal') closeModal(); });
+
+  // ===== Utilities =====
+  function escapeHtml(str){ return String(str||'').replace(/[&<>\"]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[s])); }
+
+  // ===== Render inicial =====
+  function renderAll(){ renderProducts(); renderSectors(); renderDraft(); renderTransfers(); }
+  renderAll();
+})();
+</script>
+</body>
 </html>
